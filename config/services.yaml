@@ -1,0 +1,30 @@
+postgresql:
+  enabled: true
+
+network_engine:
+  enabled: true
+  working_directory: "network-engine"
+  command: ".venv\\Scripts\\python.exe"
+  arguments:
+    - "main.py"
+
+api:
+  enabled: true
+  working_directory: "network-engine"
+  command: ".venv\\Scripts\\python.exe"
+  arguments:
+    - "-m"
+    - "uvicorn"
+    - "api.app:app"
+    - "--host"
+    - "127.0.0.1"
+    - "--port"
+    - "8000"
+
+dashboard:
+  enabled: true
+  working_directory: "dashboard"
+  command: "npm.cmd"
+  arguments:
+    - "run"
+    - "start"

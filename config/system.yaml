@@ -1,0 +1,26 @@
+system:
+  name: NetworkMonitor
+  environment: production
+
+network:
+  wan_interface: "Wi-Fi"
+  lan_interface: "Ethernet"
+
+  lan_ip: "192.168.137.1"
+  lan_subnet: "255.255.255.0"
+
+  gateway: "192.168.137.2"
+
+api:
+  host: "127.0.0.1"
+  port: 8000
+
+dashboard:
+  host: "127.0.0.1"
+  port: 3000
+
+database:
+  host: "127.0.0.1"
+  port: 5432
+  name: "network_control"
+  user: "network_admin"

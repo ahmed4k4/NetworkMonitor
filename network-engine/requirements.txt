@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+websockets
+
+psutil
+scapy
+pydantic
+python-dotenv
+pyyaml
+
+sqlalchemy
+psycopg[binary]
+
+openpyxl
+reportlab
+
+requests
