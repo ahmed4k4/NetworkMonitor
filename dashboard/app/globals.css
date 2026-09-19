@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Import Design System CSS Variables */
+@import "../lib/design-system/css-variables.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Colors - mapped to design system tokens */
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-text-primary);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--color-border-focus);
+  --color-sidebar-border: var(--color-border);
+  --color-sidebar-accent-foreground: var(--color-text-primary);
+  --color-sidebar-accent: var(--color-hover);
+  --color-sidebar-primary-foreground: var(--color-primary-foreground);
+  --color-sidebar-primary: var(--color-primary-500);
+  --color-sidebar-foreground: var(--color-text-primary);
+  --color-sidebar: var(--color-surface);
+  --color-chart-1: var(--color-primary-500);
+  --color-chart-2: var(--color-accent-500);
+  --color-chart-3: var(--color-success-500);
+  --color-chart-4: var(--color-warning-500);
+  --color-chart-5: var(--color-danger-500);
+  --color-ring: var(--color-border-focus);
+  --color-input: var(--color-border);
+  --color-border: var(--color-border);
+  --color-destructive: var(--color-danger-500);
+  --color-accent-foreground: var(--color-text-primary);
+  --color-accent: var(--color-accent-500);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-muted: var(--color-surface);
+  --color-secondary-foreground: var(--color-text-primary);
+  --color-secondary: var(--color-accent-500);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-primary: var(--color-primary-500);
+  --color-popover-foreground: var(--color-text-primary);
+  --color-popover: var(--color-surface-elevated);
+  --color-card-foreground: var(--color-text-primary);
+  --color-card: var(--color-surface);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-2xl);
+  --radius-4xl: var(--radius-2xl);
+}
+
+/* Light mode variables are defined in css-variables.css :root */
+
+/* Dark mode variables are defined in css-variables.css .dark */
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: var(--color-border-focus);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+  }
+  html {
+    font-family: var(--font-sans);
+  }
+}

@@ -1,0 +1,71 @@
+dashboard/
+│
+├── app/
+│   ├── page.tsx
+│   ├── login/
+│   │   └── page.tsx
+│   │
+│   ├── devices/
+│   │   ├── page.tsx
+│   │   └── [id]/
+│   │       └── page.tsx
+│   │
+│   ├── traffic/
+│   │   └── page.tsx
+│   │
+│   ├── flows/
+│   │   └── page.tsx
+│   │
+│   ├── domains/
+│   │   └── page.tsx
+│   │
+│   ├── applications/
+│   │   └── page.tsx
+│   │
+│   ├── analytics/
+│   │   └── page.tsx
+│   │
+│   ├── history/
+│   │   └── page.tsx
+│   │
+│   ├── alerts/
+│   │   └── page.tsx
+│   │
+│   ├── rules/
+│   │   └── page.tsx
+│   │
+│   ├── settings/
+│   │   └── page.tsx
+│   │
+│   └── layout.tsx
+│
+├── components/
+│   ├── layout/
+│   │   ├── Sidebar.tsx
+│   │   ├── Header.tsx
+│   │   └── PageContainer.tsx
+│   │
+│   ├── dashboard/
+│   │   ├── StatCard.tsx
+│   │   ├── TrafficChart.tsx
+│   │   ├── DevicesTable.tsx
+│   │   ├── TopTalkers.tsx
+│   │   └── AlertsPanel.tsx
+│   │
+│   ├── devices/
+│   │   ├── DeviceCard.tsx
+│   │   ├── DeviceStatus.tsx
+│   │   └── DeviceActions.tsx
+│   │
+│   └── ui/
+│
+├── lib/
+│   ├── api.ts
+│   ├── websocket.ts
+│   ├── auth.ts
+│   └── types.ts
+│
+└── hooks/
+    ├── useDevices.ts
+    ├── useTraffic.ts
+    └── useWebSocket.ts
