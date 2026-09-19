@@ -792,7 +792,7 @@ VALUES (%s, date_trunc('month', (NOW() AT TIME ZONE %s)::date)::date, %s, %s, %s
                         upload_bytes = usage_monthly.upload_bytes + EXCLUDED.upload_bytes,
                         packets = usage_monthly.packets + EXCLUDED.packets
                     """,
-                    (device_id, download_delta, upload_delta, packets_delta)
+                    (device_id, APP_TZ, download_delta, upload_delta, packets_delta)
                 )
 
                 # Update data_limits used_bytes based on reset_period
@@ -900,8 +900,14 @@ class ConnectionRepository:
         finally:
             return_connection(connection)
 
-    def get_active_connections(self, device_id=None):
-        """Get active connections"""
+    def get_active_connections(self, device_id=None, stale_seconds=300):
+        """Get active connections.
+
+        Mirrors get_active_flows: rows not touched within the staleness window
+        are stale (engine stopped without closing them) and must not inflate
+        the live "connections" metric. They are marked CLOSED so retention can
+        reclaim them.
+        """
         connection = get_connection()
         
         try:
@@ -909,16 +915,42 @@ class ConnectionRepository:
                 if device_id:
                     cursor.execute(
                         """
+                        UPDATE connections
+                        SET state = 'CLOSED', closed_at = COALESCE(closed_at, NOW())
+                        WHERE device_id = %s AND state = 'ACTIVE'
+                          AND last_seen < NOW() - make_interval(secs => %s)
+                        """,
+                        (device_id, stale_seconds)
+                    )
+                    cursor.execute(
+                        """
                         SELECT * FROM connections
                         WHERE device_id = %s AND state = 'ACTIVE'
+                          AND last_seen >= NOW() - make_interval(secs => %s)
                         ORDER BY last_seen DESC
                         """,
-                        (device_id,)
+                        (device_id, stale_seconds)
                     )
                 else:
                     cursor.execute(
-                        "SELECT * FROM connections WHERE state = 'ACTIVE' ORDER BY last_seen DESC"
+                        """
+                        UPDATE connections
+                        SET state = 'CLOSED', closed_at = COALESCE(closed_at, NOW())
+                        WHERE state = 'ACTIVE'
+                          AND last_seen < NOW() - make_interval(secs => %s)
+                        """,
+                        (stale_seconds,)
                     )
+                    cursor.execute(
+                        """
+                        SELECT * FROM connections
+                        WHERE state = 'ACTIVE'
+                          AND last_seen >= NOW() - make_interval(secs => %s)
+                        ORDER BY last_seen DESC
+                        """,
+                        (stale_seconds,)
+                    )
+                connection.commit()
                 return cursor.fetchall()
         finally:
             return_connection(connection)
