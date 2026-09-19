@@ -50,16 +50,29 @@ class NetworkConfig:
                 net_config.get("lan_ip", "192.168.137.1")
             )
         
+        if self.lan_subnet is None:
+            self.lan_subnet = os.getenv(
+                "LAN_SUBNET",
+                net_config.get("lan_subnet", "192.168.137.0/24")
+            )
+        
         if self.upstream_gateway is None:
             self.upstream_gateway = os.getenv(
                 "UPSTREAM_GATEWAY",
-                net_config.get("upstream_gateway", "192.168.137.2")
+                net_config.get("upstream_gateway", "")
             )
         
         if self.wan_interface is None:
             self.wan_interface = os.getenv(
                 "WAN_INTERFACE",
                 net_config.get("wan_interface", "Wi-Fi")
+            )
+        
+        # capture_filter: optional BPF filter for the packet sniffer.
+        if self.capture_filter == "":
+            self.capture_filter = os.getenv(
+                "CAPTURE_FILTER",
+                net_config.get("capture_filter", "")
             )
         
         if self.scan_interval is None:
@@ -133,3 +146,22 @@ class DatabaseConfig:
 
 network_config = NetworkConfig()
 database_config = DatabaseConfig()
+
+
+@dataclass
+class AuthConfig:
+    jwt_secret: str = None
+    jwt_algorithm: str = "HS256"
+    token_expire_minutes: int = 60
+    refresh_token_expire_days: int = 30
+
+    def __post_init__(self):
+        """Apply YAML config and environment overrides"""
+        if self.jwt_secret is None:
+            self.jwt_secret = os.getenv(
+                "NETWORK_CONTROL_JWT_SECRET",
+                yaml_config.get("jwt_secret", "your-secure-random-secret-change-in-production")
+            )
+
+
+auth_config = AuthConfig()

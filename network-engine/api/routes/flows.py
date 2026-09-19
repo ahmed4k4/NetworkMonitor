@@ -1,13 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+from typing import Optional
 
-from database.connection import get_connection
+from database.connection import get_connection, return_connection
 
 
 router = APIRouter()
 
 
 @router.get("/active")
-def active_flows():
+def active_flows(device_id: Optional[str] = Query(default=None)):
 
     connection = get_connection()
 
@@ -15,31 +16,58 @@ def active_flows():
 
         with connection.cursor() as cursor:
 
-            cursor.execute(
-                """
-                SELECT
-                    id,
-                    device_id,
-                    source_ip,
-                    destination_ip,
-                    source_port,
-                    destination_port,
-                    protocol,
-                    packets,
-                    bytes,
-                    upload_bytes,
-                    download_bytes,
-                    direction,
-                    started_at,
-                    last_seen,
-                    state
-                FROM flows
+            if device_id:
+                cursor.execute(
+                    """
+                    SELECT
+                        id,
+                        device_id,
+                        source_ip,
+                        destination_ip,
+                        source_port,
+                        destination_port,
+                        protocol,
+                        packets,
+                        bytes,
+                        upload_bytes,
+                        download_bytes,
+                        direction,
+                        started_at,
+                        last_seen,
+                        state
+                    FROM flows
+                    WHERE device_id::text = %s
+                    ORDER BY last_seen DESC
+                    LIMIT 500
+                    """,
+                    (device_id,),
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT
+                        id,
+                        device_id,
+                        source_ip,
+                        destination_ip,
+                        source_port,
+                        destination_port,
+                        protocol,
+                        packets,
+                        bytes,
+                        upload_bytes,
+                        download_bytes,
+                        direction,
+                        started_at,
+                        last_seen,
+                        state
+                    FROM flows
 
-                ORDER BY last_seen DESC
+                    ORDER BY last_seen DESC
 
-                LIMIT 500
-                """
-            )
+                    LIMIT 500
+                    """
+                )
 
             rows = cursor.fetchall()
 
@@ -66,4 +94,4 @@ def active_flows():
 
     finally:
 
-        connection.close()
+        return_connection(connection)

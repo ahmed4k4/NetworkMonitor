@@ -1,6 +1,8 @@
 from logger import logger
+import time
 
 from database.migrations import initialize_database
+from database.connection import close_pool
 
 from engine import NetworkEngine
 
@@ -36,12 +38,16 @@ def main():
     # Start packet capture (blocking)
     try:
         engine.start_capture()
+        # Keep main thread alive while capture runs
+        while engine.running:
+            time.sleep(1)
     except KeyboardInterrupt:
         logger.info("Received interrupt signal")
     finally:
         logger.info("Stopping engine...")
         engine.stop_discovery_loop()
         engine.stop_capture()
+        close_pool()
         logger.info("Engine stopped")
 
 

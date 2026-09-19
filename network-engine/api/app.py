@@ -1,8 +1,9 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from ipaddress import IPv4Address, IPv6Address
 import json
+from typing import Optional
 
 # Custom JSON encoder to handle IPv4Address/IPv6Address
 class IPAddressEncoder(json.JSONEncoder):
@@ -28,6 +29,7 @@ from api.routes.analytics import router as analytics_router
 from api.routes.applications import router as applications_router
 from api.routes.auth import router as auth_router
 from api.routes.control import router as control_router
+from api.routes.data_management import router as data_management_router
 from api.routes.devices import router as devices_router
 from api.routes.dns import router as dns_router
 from api.routes.flows import router as flows_router
@@ -59,6 +61,7 @@ app.include_router(dns_router, prefix="/api/dns", tags=["DNS"])
 app.include_router(applications_router, prefix="/api/applications", tags=["Applications"])
 app.include_router(analytics_router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(control_router, prefix="/api/control", tags=["Control"])
+app.include_router(data_management_router, prefix="/api/data-management", tags=["Data Management"])
 app.include_router(system_router, prefix="/api/system", tags=["System"])
 app.include_router(alerts_router, prefix="/api/alerts", tags=["Alerts"])
 app.include_router(reports_router, prefix="/api/reports", tags=["Reports"])
@@ -75,5 +78,6 @@ def health():
 @app.websocket("/ws")
 async def websocket_route(
     websocket: WebSocket,
+    token: Optional[str] = Query(None)
 ):
-    await websocket_endpoint(websocket)
+    await websocket_endpoint(websocket, token)

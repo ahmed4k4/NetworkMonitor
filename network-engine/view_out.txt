@@ -1,0 +1,27 @@
+189:         device_id = device.get("device_id", "dev_001")
+190:         print(f"\nUsing device: {device_id}")
+191:         print(f"  IP: {device.get('ip', 'N/A')}")
+192:         print(f"  Name: {device.get('custom_name') or device.get('hostname') or 'N/A'}")
+193:         print(f"  State: {device.get('state', 'N/A')}")
+194:         print(f"  Download Today: {device.get('download_today', 0):,} bytes")
+195:         print(f"  Upload Today: {device.get('upload_today', 0):,} bytes")
+196:         print(f"  Total Today: {device.get('total_today', 0):,} bytes")
+197:         print(f"  Current Speed: {device.get('current_speed_bps', 0):,} bps")
+198: 
+199: intel = test_device_intelligence(token, device_id, "24h")
+200:     test_device_applications(token, device_id, "24h")
+201:     test_device_domains(token, device_id, "24h")
+202:     test_device_categories(token, device_id, "24h")
+203:     test_device_protocols(token, device_id, "24h")
+204:     test_device_activity(token, device_id, 7)
+205:     test_device_peaks(token, device_id, 30)
+206:     test_device_sni(token, device_id, "24h")
+207: 
+208:     test_analytics_domains(token)
+209:     test_analytics_applications(token)
+210: 
+211:     test_traffic_recent(token, device_id)
+212:     test_traffic_recent(token, None)
+213:     test_traffic_history(token, device_id, 30)
+214:     test_traffic_history(token, None, 30)
+215: 

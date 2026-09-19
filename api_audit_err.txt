@@ -1,0 +1,31 @@
+2026-09-19 02:46:46,981 | INFO | Database connection pool created
+2026-09-19 02:46:47,010 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a1f10>
+2026-09-19 02:46:47,011 | INFO | Loaded 2 quotas from database
+2026-09-19 02:46:47,030 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x1795687f810>
+2026-09-19 02:46:47,032 | INFO | Loaded 2 quotas from database
+INFO:     Started server process [18532]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-09-19 02:51:39,737 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x1795687fc50>
+2026-09-19 02:51:39,810 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a1f10>
+2026-09-19 02:51:39,821 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x1795687f810>
+2026-09-19 02:51:39,827 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17956c6d550>
+2026-09-19 02:51:39,855 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a33d0>
+2026-09-19 02:51:39,905 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a2e50>
+2026-09-19 02:51:39,919 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x1795687fc50>
+2026-09-19 02:51:39,948 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a1f10>
+2026-09-19 04:23:04,236 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17956c6d550>
+2026-09-19 04:23:04,254 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a33d0>
+2026-09-19 04:23:04,294 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a2e50>
+2026-09-19 04:23:04,315 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x1795687fc50>
+2026-09-19 04:23:04,333 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x179568a1f10>
+2026-09-19 04:23:04,341 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957eba050>
+2026-09-19 04:23:04,357 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957ec2950>
+2026-09-19 04:23:04,369 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957ee0210>
+2026-09-19 04:23:04,373 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957eba050>
+2026-09-19 04:23:04,380 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957e2a9d0>
+2026-09-19 04:23:04,388 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957ec2950>
+2026-09-19 04:23:04,391 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957ee0210>
+2026-09-19 04:23:04,393 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17957eba050>
+2026-09-19 04:23:04,393 | WARNING | rolling back returned connection: <psycopg.Connection [INTRANS] (host=127.0.0.1 user=postgres database=network_control) at 0x17956c57c10>

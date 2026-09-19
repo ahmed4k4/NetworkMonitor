@@ -7,7 +7,7 @@ API = 'http://localhost:8000'
 
 # Login
 r = requests.post(API + '/api/auth/login',
-                  json={"username": "admin", "password": "admin_password_change_me"},
+                  json={"username": "admin", "password": "admin_change_me"},
                   timeout=5)
 token = r.json()["access_token"]
 headers = {"Authorization": f"Bearer {token}"}

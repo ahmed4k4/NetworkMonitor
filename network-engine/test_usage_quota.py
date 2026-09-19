@@ -20,7 +20,7 @@ QUOTAS_ENDPOINT = f"{API_BASE_URL}/api/control/quotas"
 LIMITS_ENDPOINT = f"{API_BASE_URL}/api/control/limits"
 
 USERNAME = "admin"
-PASSWORD = "admin_password_change_me"
+PASSWORD = "admin_change_me"
 
 
 def login():

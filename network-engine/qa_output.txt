@@ -1,0 +1,214 @@
+============================================================
+NETWORK CONTROL CENTER - REAL DATA QA PASS
+============================================================
+API URL: http://127.0.0.1:8000
+Time: 2026-08-25T08:57:09.977723
+
+============================================================
+TEST: Health Check
+METHOD: GET /api/health  PARAMS: None
+  STATUS: 200
+  -> dict keys: ['status', 'service']
+
+LOGIN SUCCESS - Token acquired
+
+============================================================
+TEST: Devices List
+METHOD: GET /api/devices  PARAMS: None
+  STATUS: 200
+  -> list[9]
+  -> sample: {"device_id": "dev_002", "mac": "20:e8:82:ac:0b:72", "ip": "192.168.137.2", "hostname": "csp3.zte.com.cn", "custom_name": null, "vendor": "Unknown", "interface": "Ethernet", "state": "ONLINE", "first_seen": "2026-08-16T14:32:16.807324+00:00", "last_s
+
+Using device: dev_002 (busiest by total_today)
+  IP: 192.168.137.2
+  Name: csp3.zte.com.cn
+  State: ONLINE
+  Download Today: 0 bytes
+  Upload Today: 0 bytes
+  Total Today: 0 bytes
+  Online: N/A
+
+============================================================
+TEST: Device Detail (dev_002)
+METHOD: GET /api/devices/dev_002  PARAMS: None
+  STATUS: 200
+  -> dict keys: ['device_id', 'mac', 'ip', 'hostname', 'custom_name', 'vendor', 'interface', 'state', 'first_seen', 'last_seen', 'upload', 'download', 'download_today', 'upload_today', 'total_today', 'download_speed_bps', 'upload_speed_bps', 'current_speed_bps', 'usage_percentage', 'quota_bytes', 'quota_used_bytes', 'quota_remaining_bytes', 'quota_enabled', 'limit_id', 'download_limit_bps', 'upload_limit_bps', 'limit_enabled', 'history']
+
+============================================================
+TEST: Device Intelligence (dev_002, 24h)
+METHOD: GET /api/devices/dev_002/intelligence  PARAMS: {'range': '24h'}
+  STATUS: 200
+  -> dict keys: ['device_id', 'period_hours', 'total_download_bytes', 'total_upload_bytes', 'total_bytes', 'total_connections', 'top_applications', 'top_domains', 'categories', 'protocols', 'peaks', 'activity_timeline']
+  -> total_bytes: 0
+  -> top_applications: list[0]
+  -> top_domains: list[0]
+  -> categories: list[0]
+  -> protocols: list[0]
+  -> activity_timeline: list[0]
+  -> peaks: list[0]
+
+============================================================
+TEST: Device Applications (dev_002)
+METHOD: GET /api/devices/dev_002/applications  PARAMS: {'range': '24h'}
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Device Domains (dev_002)
+METHOD: GET /api/devices/dev_002/domains  PARAMS: {'range': '24h'}
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Device Categories (dev_002)
+METHOD: GET /api/devices/dev_002/categories  PARAMS: {'range': '24h'}
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Device Protocols (dev_002)
+METHOD: GET /api/devices/dev_002/protocols  PARAMS: {'range': '24h'}
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Device Activity (dev_002, 7d)
+METHOD: GET /api/devices/dev_002/activity  PARAMS: {'days': 7}
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Device Peaks (dev_002, 30d)
+METHOD: GET /api/devices/dev_002/peaks  PARAMS: {'days': 30}
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Device SNI (dev_002)
+METHOD: GET /api/devices/dev_002/sni  PARAMS: {'range': '24h'}
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Analytics Domains
+METHOD: GET /api/analytics/domains  PARAMS: None
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Analytics Applications
+METHOD: GET /api/analytics/applications  PARAMS: None
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Traffic Recent (dev_002)
+METHOD: GET /api/traffic/recent  PARAMS: {'device_id': 'dev_002'}
+  STATUS: 200
+  -> list[100]
+  -> sample: {"device_id": "dev_002", "ip": "192.168.137.2", "time": "2026-08-23 21:33:35.053638+00", "download": 0, "upload": 0, "packets": 0, "connections": 6, "download_speed_bps": 0, "upload_speed_bps": 0}
+
+============================================================
+TEST: Traffic Recent (all)
+METHOD: GET /api/traffic/recent  PARAMS: {}
+  STATUS: 200
+  -> list[100]
+  -> sample: {"device_id": "dev_002", "ip": "192.168.137.2", "time": "2026-08-23 21:33:35.053638+00", "download": 0, "upload": 0, "packets": 0, "connections": 6, "download_speed_bps": 0, "upload_speed_bps": 0}
+
+============================================================
+TEST: Traffic History (dev_002, 30d)
+METHOD: GET /api/traffic/history  PARAMS: {'days': 30, 'device_id': 'dev_002'}
+  STATUS: 200
+  -> list[6]
+  -> sample: {"date": "2026-08-17", "download": 0, "upload": 0, "total": 0, "packets": 84248}
+
+============================================================
+TEST: Traffic History (all, 30d)
+METHOD: GET /api/traffic/history  PARAMS: {'days': 30}
+  STATUS: 200
+  -> list[7]
+  -> sample: {"date": "2026-08-16", "download": 30000, "upload": 15000, "total": 45000, "packets": 3000}
+
+============================================================
+TEST: Limits
+METHOD: GET /api/control/limits  PARAMS: None
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Quotas
+METHOD: GET /api/control/quotas  PARAMS: None
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Active Flows/Connections (dev_002)
+METHOD: GET /api/flows/active  PARAMS: None
+  STATUS: 200
+  -> list[500]
+  -> sample: {"id": 401555, "device_id": "dev_001", "source_ip": "fe80::e732:3b8c:ad15:7adc", "destination_ip": "fe80::1", "source_port": 57381, "destination_port": 53, "protocol": "UDP", "packets": 200, "bytes": 22250, "upload": 0, "download": 0, "direction": "L
+
+============================================================
+TEST: DNS Recent Queries (dev_002)
+METHOD: GET /api/dns/recent  PARAMS: None
+  STATUS: 200
+  -> list[200]
+  -> sample: {"time": "2026-08-23T21:35:02.315335+00:00", "device_id": "dev_001", "domain": "2.137.168.192.in-addr.arpa", "query_type": "12", "response_ip": null}
+
+============================================================
+TEST: Alerts
+METHOD: GET /api/alerts  PARAMS: None
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: System Status
+METHOD: GET /api/system/status  PARAMS: None
+  STATUS: 200
+  -> dict keys: ['engine', 'database', 'capture', 'api', 'total_devices', 'online_devices', 'offline_devices', 'active_connections', 'active_flows', 'total_download', 'total_upload', 'today_download', 'today_upload', 'current_download_speed_bps', 'current_upload_speed_bps', 'current_speed_bps', 'peak_bandwidth_bps']
+
+============================================================
+TEST: Analytics Top Devices
+METHOD: GET /api/analytics/top-devices  PARAMS: None
+  STATUS: 200
+  -> list[9]
+  -> sample: {"device_id": "dev_003", "ip": "192.168.137.75/32", "upload": 13139514, "download": 60173183, "total": 73312697}
+
+============================================================
+TEST: Analytics Hourly
+METHOD: GET /api/analytics/hourly  PARAMS: None
+  STATUS: 200
+  -> list[0]
+
+============================================================
+TEST: Analytics Daily
+METHOD: GET /api/analytics/daily  PARAMS: None
+  STATUS: 200
+  -> list[5]
+  -> sample: {"time": "2026-08-23", "download": 9323036, "upload": 233691, "packets": 9033, "connections": 0}
+
+============================================================
+CROSS-VERIFICATION
+============================================================
+
+Device Intelligence (24h):
+  total_download_bytes: 0
+  total_upload_bytes: 0
+  total_bytes: 0
+  total_connections: 0
+  top_applications: list[0]
+  top_domains: list[0]
+  categories: list[0]
+  protocols: list[0]
+  peaks: list[0]
+  activity_timeline: list[0]
+
+Devices List (today):
+  download_today: 0
+  upload_today: 0
+  total_today: 0
+  connections_today: 0
+
+============================================================
+QA PASS COMPLETE
+============================================================

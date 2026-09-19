@@ -1,8 +1,9 @@
 import traceback
+from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
 
-from database.connection import get_connection
+from database.connection import get_connection, return_connection
 from api.security import get_current_user
 
 router = APIRouter()
@@ -82,7 +83,7 @@ def recent_traffic(
         )
 
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/history")
@@ -106,11 +107,11 @@ def traffic_history(
                         SUM(packets) AS packets
                     FROM traffic_samples
                     WHERE device_id::text = %s
-                      AND sampled_at >= NOW() - INTERVAL '%s days'
+                      AND sampled_at >= NOW() - %s
                     GROUP BY DATE(sampled_at)
                     ORDER BY DATE(sampled_at) ASC
                     """,
-                    (device_id, days),
+                    (device_id, timedelta(days=days)),
                 )
             else:
                 cursor.execute(
@@ -122,11 +123,11 @@ def traffic_history(
                         SUM(download_bytes + upload_bytes) AS total,
                         SUM(packets) AS packets
                     FROM traffic_samples
-                    WHERE sampled_at >= NOW() - INTERVAL '%s days'
+                    WHERE sampled_at >= NOW() - %s
                     GROUP BY DATE(sampled_at)
                     ORDER BY DATE(sampled_at) ASC
                     """,
-                    (days,),
+                    (timedelta(days=days),),
                 )
 
             columns = [col[0] for col in cursor.description]
@@ -149,4 +150,4 @@ def traffic_history(
         )
 
     finally:
-        connection.close()
+        return_connection(connection)

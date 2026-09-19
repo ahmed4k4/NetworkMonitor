@@ -1,0 +1,37 @@
+"""Probe root + find real routes + traffic_samples schema."""
+import json, urllib.request, urllib.error
+from database.connection import get_connection, return_connection
+
+def try_get(path):
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:8080" + path, timeout=8) as r:
+            body = r.read().decode()[:300]
+            return f"{r.status} OK {body}"
+    except urllib.error.HTTPError as e:
+        return f"{e.code} {e.reason}"
+    except Exception as e:
+        return f"ERR {e}"
+
+for p in ["/", "/api", "/api/devices", "/api/health", "/health", "/docs", "/openapi.json", "/api/system/status"]:
+    print(f"GET {p:22} -> {try_get(p)}")
+
+def qrows(q):
+    c = get_connection()
+    try:
+        with c.cursor() as cur:
+            cur.execute(q)
+            return cur.fetchall()
+    finally:
+        return_connection(c)
+
+print("\n[traffic_samples columns]:")
+for r in qrows("SELECT column_name, data_type FROM information_schema.columns WHERE table_name='traffic_samples' ORDER BY ordinal_position"):
+    print("  ", r[0], ":", r[1])
+
+print("\n[usage_daily columns]:")
+for r in qrows("SELECT column_name, data_type FROM information_schema.columns WHERE table_name='usage_daily' ORDER BY ordinal_position"):
+    print("  ", r[0], ":", r[1])
+
+print("\n[devices columns]:")
+for r in qrows("SELECT column_name, data_type FROM information_schema.columns WHERE table_name='devices' ORDER BY ordinal_position"):
+    print("  ", r[0], ":", r[1])

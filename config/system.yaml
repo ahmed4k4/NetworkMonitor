@@ -1,26 +1,88 @@
-system:
-  name: NetworkMonitor
-  environment: production
+# NetworkMonitor System Configuration
+# This file contains system-wide configuration values
+
+# JWT Secret for API authentication (set in production!)
+jwt_secret: "your-secure-random-secret-change-in-production"
 
 network:
-  wan_interface: "Wi-Fi"
+  # ICS shared subnet: this host (192.168.137.1) is the NAT gateway/DHCP
+  # server for the LAN. Client devices (e.g. the phone) receive
+  # 192.168.137.2+ addresses and are ORDINARY LAN DEVICES.
+  #
+  # DIRECTION CLASSIFICATION (critical):
+  # The monitor captures LAN traffic on the "Ethernet" interface. Every
+  # packet the phone exchanges with the internet transits this interface as
+  #   phone (192.168.137.2) <-> host/NAT (192.168.137.1)
+  # From the LAN devices' perspective, the host IP 192.168.137.1 IS the
+  # boundary to the internet (NAT gateway). Therefore, for correct
+  # upload/download classification, 192.168.137.1 must be treated as the
+  # boundary (NOT a local device):
+  #   phone -> 192.168.137.1  ==  UPLOAD
+  #   192.168.137.1 -> phone  ==  DOWNLOAD
+  #
+  # This is NOT the same as assuming the phone's IP is the gateway. The phone
+  # is 192.168.137.2. The boundary is the HOST's own NAT IP (192.168.137.1).
   lan_interface: "Ethernet"
-
   lan_ip: "192.168.137.1"
-  lan_subnet: "255.255.255.0"
+  lan_subnet: "192.168.137.0/24"
+  upstream_gateway: "192.168.137.1"
+  wan_interface: "Wi-Fi"
+  scan_interval: 10
+  discovery_interval: 10
+  flow_timeout: 60
+  bandwidth_window: 1
 
-  gateway: "192.168.137.2"
+# DNS servers for health checks
+dns_servers:
+  - "8.8.8.8"
+  - "1.1.1.1"
 
-api:
-  host: "127.0.0.1"
-  port: 8000
+# Internet connectivity test hosts
+internet_test_hosts:
+  - "8.8.8.8"
+  - "1.1.1.1"
+  - "cloudflare.com"
 
-dashboard:
-  host: "127.0.0.1"
-  port: 3000
-
+# PostgreSQL settings
 database:
   host: "127.0.0.1"
   port: 5432
   name: "network_control"
-  user: "network_admin"
+  user: "postgres"
+  # Password should be in .env file, not here
+
+# API settings
+api:
+  host: "127.0.0.1"
+  port: 8000
+
+# Dashboard settings
+dashboard:
+  host: "127.0.0.1"
+  port: 3000
+
+# Service startup timeouts (seconds)
+timeouts:
+  postgresql: 30
+  network_engine: 30
+  api: 20
+  dashboard: 60
+
+# Health check intervals (seconds)
+health_check_intervals:
+  postgresql: 5
+  network_engine: 10
+  api: 10
+  dashboard: 30
+
+# Backup settings
+backup:
+  pg_dump_path: "C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe"
+  retention_days: 30
+  max_backups: 50
+
+# Logging
+logging:
+  level: "INFO"
+  max_log_size_mb: 100
+  max_log_files: 10

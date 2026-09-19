@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 
-from database.connection import get_connection
-from api.security import get_current_user
+from database.connection import get_connection, return_connection
+from api.security import get_current_user, require_permission
+from database.audit import log_admin_action
 from api.websocket import manager as ws_manager
 
 router = APIRouter()
@@ -70,35 +71,44 @@ def system_status():
                 total_download = row[0] or 0
                 total_upload = row[1] or 0
 
-                # Real today's usage
+                # Real today's usage (Egypt timezone)
                 cursor.execute(
                     """
                     SELECT
                         COALESCE(SUM(download_bytes), 0),
                         COALESCE(SUM(upload_bytes), 0)
                     FROM usage_daily
-                    WHERE day_start = CURRENT_DATE
+                    WHERE day_start = (NOW() AT TIME ZONE 'Africa/Cairo')::date
                     """
                 )
                 row = cursor.fetchone()
                 today_download = row[0] or 0
                 today_upload = row[1] or 0
 
-                # Latest speed from traffic_samples
+                # Latest real-time speed from traffic_samples (most recent sample per device, summed)
                 cursor.execute(
                     """
-                    SELECT
-                        COALESCE(MAX(download_speed_bps), 0),
-                        COALESCE(MAX(upload_speed_bps), 0)
-                    FROM traffic_samples
-                    WHERE sampled_at > NOW() - INTERVAL '5 minutes'
+                    WITH latest_samples AS (
+                        SELECT DISTINCT ON (device_id) 
+                            device_id,
+                            download_speed_bps,
+                            upload_speed_bps,
+                            sampled_at
+                        FROM traffic_samples
+                        WHERE sampled_at > NOW() - INTERVAL '2 minutes'
+                        ORDER BY device_id, sampled_at DESC
+                    )
+                    SELECT 
+                        COALESCE(SUM(download_speed_bps), 0),
+                        COALESCE(SUM(upload_speed_bps), 0)
+                    FROM latest_samples
                     """
                 )
                 row = cursor.fetchone()
                 current_download_speed = row[0] or 0
                 current_upload_speed = row[1] or 0
 
-                # Peak bandwidth from traffic_samples
+                # Peak bandwidth from traffic_samples (true peak over 24h)
                 cursor.execute(
                     """
                     SELECT COALESCE(MAX(download_speed_bps + upload_speed_bps), 0)
@@ -122,7 +132,7 @@ def system_status():
         current_upload_speed = 0
         peak_bandwidth_bps = 0
     finally:
-        connection.close()
+        return_connection(connection)
 
     return {
         "engine": "running",
@@ -189,7 +199,7 @@ def get_interfaces(user=Depends(get_current_user)):
             detail=f"Failed to load interfaces: {error}",
         )
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 class SettingsUpdate(BaseModel):
@@ -200,7 +210,7 @@ class SettingsUpdate(BaseModel):
 
 
 @router.get("/settings")
-def get_settings(user=Depends(get_current_user)):
+def get_settings(user=Depends(require_permission("settings:read"))):
     """
     Return all system settings from the database.
     """
@@ -232,7 +242,7 @@ def get_settings(user=Depends(get_current_user)):
             detail=f"Failed to load settings: {error}",
         )
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 class BroadcastRequest(BaseModel):
@@ -259,13 +269,17 @@ def broadcast_message(request: BroadcastRequest):
 
 
 @router.put("/settings")
-def update_settings(data: SettingsUpdate, user=Depends(get_current_user)):
+def update_settings(data: SettingsUpdate, user=Depends(require_permission("settings:write"))):
     """
     Update system settings.
     """
     connection = get_connection()
     try:
         with connection.cursor() as cursor:
+            # Get old values for audit
+            cursor.execute("SELECT key, value FROM settings WHERE key IN ('system_name', 'admin_email', 'dns_server', 'bandwidth_limit')")
+            old_settings = {row[0]: row[1] for row in cursor.fetchall()}
+            
             updates = {
                 "system_name": data.system_name,
                 "admin_email": data.admin_email,
@@ -285,8 +299,17 @@ def update_settings(data: SettingsUpdate, user=Depends(get_current_user)):
                         (key, value),
                     )
 
-            connection.commit()
-
+        connection.commit()
+        
+        # Audit log
+        new_settings = {
+            "system_name": data.system_name or old_settings.get("system_name", "NetworkMonitor"),
+            "admin_email": data.admin_email or old_settings.get("admin_email", ""),
+            "dns_server": data.dns_server or old_settings.get("dns_server", ""),
+            "bandwidth_limit": data.bandwidth_limit or int(old_settings.get("bandwidth_limit", 0) or 0),
+        }
+        log_admin_action(user["username"], "SETTINGS", "system", str(old_settings), str(new_settings))
+        
         return {
             "system_name": data.system_name or "NetworkMonitor",
             "admin_email": data.admin_email or "",
@@ -299,4 +322,4 @@ def update_settings(data: SettingsUpdate, user=Depends(get_current_user)):
             detail=f"Failed to update settings: {error}",
         )
     finally:
-        connection.close()
+        return_connection(connection)

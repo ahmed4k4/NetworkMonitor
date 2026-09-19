@@ -1,0 +1,30 @@
+import sys, os, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+sys.path.insert(0, "network-engine")
+import psycopg
+from config import database_config as dc
+print("DB:", dc.host, dc.port, dc.database, dc.user)
+conn = psycopg.connect(host=dc.host, port=dc.port, dbname=dc.database, user=dc.user, password=dc.password)
+cur = conn.cursor()
+cur.execute("SELECT count(*), coalesce(sum(download_bytes),0), coalesce(sum(upload_bytes),0), coalesce(sum(packets),0) FROM traffic_samples WHERE device_id='dev_002'")
+print("traffic_samples dev_002 (n, dl, ul, pkts):", cur.fetchone())
+cur.execute("SELECT count(*) FROM flows WHERE device_id='dev_002'")
+print("flows dev_002:", cur.fetchone())
+cur.execute("SELECT count(*) FROM flows")
+print("flows total:", cur.fetchone())
+cur.execute("SELECT device_id, count(*) FROM traffic_samples GROUP BY device_id")
+print("traffic by device:", cur.fetchall())
+cur.execute("SELECT device_id, count(*) FROM flows GROUP BY device_id")
+print("flows by device:", cur.fetchall())
+cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='traffic_samples'")
+print("traffic_samples cols:", [r[0] for r in cur.fetchall()])
+cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='flows'")
+print("flows cols:", [r[0] for r in cur.fetchall()])
+cur.execute("""SELECT protocol, count(*), coalesce(sum(download_bytes),0), coalesce(sum(upload_bytes),0) FROM flows WHERE device_id='dev_002' GROUP BY protocol ORDER BY 3+4 DESC LIMIT 6""")
+print("dev_002 flows by proto (dl,ul):")
+for r in cur.fetchall():
+    print("  ", r)
+cur.execute("""SELECT source_ip, destination_ip, protocol, download_bytes, upload_bytes, packets FROM flows WHERE device_id='dev_002' AND (download_bytes>0 OR upload_bytes>0) ORDER BY (download_bytes+upload_bytes) DESC LIMIT 5""")
+print("dev_002 top real flows:")
+for r in cur.fetchall():
+    print("  ", r)

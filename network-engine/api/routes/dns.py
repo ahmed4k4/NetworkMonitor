@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from database.connection import get_connection
+from database.connection import get_connection, return_connection
 
 
 router = APIRouter()
@@ -50,4 +50,4 @@ def recent_dns():
 
     finally:
 
-        connection.close()
+        return_connection(connection)

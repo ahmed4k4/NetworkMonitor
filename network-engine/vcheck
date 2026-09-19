@@ -1,0 +1,71 @@
+"""Verify flows schema + live API vs DB with correct /api prefix."""
+import json, urllib.request
+from database.connection import get_connection, return_connection
+
+BASE = "http://127.0.0.1:8080/api"
+APP_TZ = "Africa/Cairo"
+
+def api(path):
+    with urllib.request.urlopen(BASE + path, timeout=15) as r:
+        return json.loads(r.read().decode())
+
+def qrows(q, args=()):
+    c = get_connection()
+    try:
+        with c.cursor() as cur:
+            cur.execute(q, args)
+            return cur.fetchall()
+    finally:
+        return_connection(c)
+
+print("=" * 80)
+print("VERIFY LIVE API VS DB (correct /api prefix)")
+print("=" * 80)
+
+cols = qrows("SELECT column_name, data_type FROM information_schema.columns WHERE table_name='flows' ORDER BY ordinal_position")
+print("\n[flows columns]:", [f"{c}:{t}" for c, t in cols])
+
+print("\n[API] GET /api/devices")
+try:
+    devs = api("/devices")
+    print(f"  count={len(devs)}")
+    for d in devs[:5]:
+        print(f"  {str(d.get('device_id'))[:14]:14} tid={d.get('total_download')} tiu={d.get('total_upload')} online={d.get('online')}")
+except Exception as e:
+    print("  ERR:", e)
+    devs = []
+
+print("\n[API] GET /api/traffic/live")
+try:
+    live = api("/traffic/live")
+    print(f"  rows={len(live) if isinstance(live, list) else live}")
+    if isinstance(live, list):
+        for s in live[:5]:
+            print("   ", json.dumps(s)[:220])
+except Exception as e:
+    print("  ERR:", e)
+
+print("\n[API] GET /api/flows")
+try:
+    fl = api("/flows")
+    print(f"  rows={len(fl) if isinstance(fl, list) else fl}")
+except Exception as e:
+    print("  ERR:", e)
+
+print("\n[API] GET /api/analytics/today")
+try:
+    t = api("/analytics/today")
+    print("  ", json.dumps(t)[:400])
+except Exception as e:
+    print("  ERR:", e)
+
+print("\n[DB] usage_daily (last 4 days)")
+rows = qrows("SELECT device_id, day_start, download_bytes, upload_bytes, packets FROM usage_daily ORDER BY day_start DESC LIMIT 8")
+for r in rows:
+    print("   ", r)
+print("\n[DB] traffic_samples last 5")
+rows = qrows("SELECT device_id, timestamp, download_bytes, upload_bytes, packets, download_speed_bps, upload_speed_bps FROM traffic_samples ORDER BY timestamp DESC LIMIT 5")
+for r in rows:
+    print("   ", r)
+
+print("\nDONE")

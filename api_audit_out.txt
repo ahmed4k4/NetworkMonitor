@@ -1,0 +1,27 @@
+INFO:     127.0.0.1:54946 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54947 - "GET /api/devices HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54947 - "GET /api/devices/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54954 - "GET /api/traffic/live HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54955 - "GET /api/devices/dev_002/usage?days=1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54956 - "GET /api/analytics/today HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54957 - "GET /api/analytics/applications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54958 - "GET /api/analytics/domains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54959 - "GET /api/analytics/domains?limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54960 - "GET /api/analytics/categories HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54961 - "GET /api/analytics/protocols HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54962 - "GET /api/analytics/peaks HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54963 - "GET /api/flows HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54964 - "GET /api/devices/dev_002/activity?days=7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54965 - "GET /api/devices/dev_002/peaks?days=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54966 - "GET /api/system/overview HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54967 - "GET /api/system/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54968 - "GET /api/analytics/overview HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54969 - "GET /api/system/summary HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55666 - "GET /api/devices/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55668 - "GET /api/traffic/recent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55670 - "GET /api/flows/active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55672 - "GET /api/analytics/domains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55674 - "GET /api/analytics/applications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55676 - "GET /api/analytics/hourly HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55677 - "GET /api/analytics/daily HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55678 - "GET /api/devices/dev_002/intelligence?range=24h HTTP/1.1" 200 OK

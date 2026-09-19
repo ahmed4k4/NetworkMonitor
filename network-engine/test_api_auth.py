@@ -27,12 +27,12 @@ DEVICES_ENDPOINT = f"{API_BASE_URL}/api/devices"
 TEST_USERS = {
     "admin": {
         "username": "admin",
-        "password": "admin_password_change_me",  # From ADMIN_PASSWORD env var default
+        "password": "admin_change_me",  # From ADMIN_PASSWORD env var default
         "role": "ADMIN"
     },
     "operator": {
         "username": "operator",
-        "password": "operator_password_change_me",  # From OPERATOR_PASSWORD env var default
+        "password": "operator_change_me",  # From OPERATOR_PASSWORD env var default
         "role": "OPERATOR"
     },
 }

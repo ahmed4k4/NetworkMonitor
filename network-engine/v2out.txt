@@ -1,0 +1,10 @@
+237 | 
+238 |     test_connections(token, device_id)
+239 |     test_connections(token, None)
+240 | 
+241 |     test_dns_queries(token, device_id)
+242 |     test_dns_queries(token, None)
+243 | 
+244 |     print("\n" + "=" * 60)
+245 |     print("CROSS-VERIFICATION")
+246 |     print("=" * 60)

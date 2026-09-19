@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
 
-from database.connection import get_connection
+from database.connection import get_connection, return_connection
 from api.security import get_current_user
 
 router = APIRouter()
@@ -42,7 +42,7 @@ def top_devices(user=Depends(get_current_user)):
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load top devices: {error}")
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/hourly")
@@ -100,7 +100,7 @@ def hourly_analytics(
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load hourly analytics: {error}")
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/daily")
@@ -138,7 +138,7 @@ def daily_analytics(
                         SUM(COALESCE(packets, 0)),
                         SUM(COALESCE(connections, 0))
                     FROM usage_daily
-                    WHERE day_start > NOW() - INTERVAL '30 days'
+                    WHERE day_start > (NOW() AT TIME ZONE 'Africa/Cairo')::date - INTERVAL '30 days'
                     GROUP BY day_start
                     ORDER BY day_start DESC
                     LIMIT 30
@@ -158,7 +158,7 @@ def daily_analytics(
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load daily analytics: {error}")
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/weekly")
@@ -196,7 +196,7 @@ def weekly_analytics(
                         SUM(COALESCE(packets, 0)),
                         SUM(COALESCE(connections, 0))
                     FROM usage_daily
-                    WHERE day_start > NOW() - INTERVAL '7 days'
+                    WHERE day_start > (NOW() AT TIME ZONE 'Africa/Cairo')::date - INTERVAL '7 days'
                     GROUP BY day_start
                     ORDER BY day_start DESC
                     LIMIT 7
@@ -216,7 +216,7 @@ def weekly_analytics(
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load weekly analytics: {error}")
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/monthly")
@@ -274,7 +274,7 @@ def monthly_analytics(
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load monthly analytics: {error}")
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/protocols")
@@ -309,25 +309,27 @@ def protocol_analytics(user=Depends(get_current_user)):
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load protocol analytics: {error}")
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/domains")
 def domain_analytics(user=Depends(get_current_user)):
-    """Return domain analytics with query counts and traffic."""
+    """Return domain analytics with query counts and traffic from attributed usage."""
     connection = get_connection()
     try:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
                 SELECT
-                    q.domain,
-                    COUNT(*) as queries,
-                    COUNT(DISTINCT q.device_id) as devices,
-                    MAX(q.queried_at)::text as last_seen
-                FROM dns_queries q
-                GROUP BY q.domain
-                ORDER BY queries DESC
+                    domain,
+                    SUM(queries) as queries,
+                    COUNT(DISTINCT device_id) as devices,
+                    MAX(hour_start)::text as last_seen,
+                    SUM(total_bytes) as traffic
+                FROM device_domain_usage
+                WHERE hour_start > NOW() - INTERVAL '24 hours'
+                GROUP BY domain
+                ORDER BY traffic DESC
                 LIMIT 50
                 """
             )
@@ -337,7 +339,7 @@ def domain_analytics(user=Depends(get_current_user)):
                 "domain": row[0],
                 "queries": row[1],
                 "devices": row[2],
-                "traffic": 0,
+                "traffic": row[4],
                 "last_seen": row[3],
             }
             for row in rows
@@ -345,46 +347,51 @@ def domain_analytics(user=Depends(get_current_user)):
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load domain analytics: {error}")
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.get("/applications")
 def application_analytics(user=Depends(get_current_user)):
-    """Return application analytics with traffic data."""
+    """Return application analytics with traffic data from attributed usage."""
     connection = get_connection()
     try:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
                 SELECT
-                    a.name,
-                    a.category,
-                    COUNT(DISTINCT d.device_id) as devices,
-                    SUM(COALESCE(f.bytes, 0)) as traffic,
-                    a.last_seen::text
-                FROM applications a
-                LEFT JOIN flows f ON f.device_id = a.name
-                LEFT JOIN devices d ON d.device_id = f.device_id
-                GROUP BY a.name, a.category, a.last_seen
-                ORDER BY traffic DESC NULLS LAST
+                    application as name,
+                    category,
+                    COUNT(DISTINCT device_id) as devices,
+                    SUM(total_bytes) as traffic,
+                    SUM(connections) as connections,
+                    MIN(hour_start)::text as first_seen,
+                    MAX(hour_start)::text as last_seen
+                FROM device_app_usage
+                WHERE hour_start > NOW() - INTERVAL '24 hours'
+                GROUP BY application, category
+                ORDER BY traffic DESC
                 LIMIT 50
                 """
             )
             rows = cursor.fetchall()
+        
+        # Calculate total traffic for percentage
+        total_traffic = sum(row[3] or 0 for row in rows)
+        
         return [
             {
                 "name": row[0],
                 "category": row[1],
                 "devices": row[2],
                 "traffic": row[3] or 0,
-                "connections": 0,
-                "percentage": 0,
-                "first_seen": row[4],
-                "last_seen": row[4],
+                "connections": row[4] or 0,
+                "percentage": round((row[3] or 0) / total_traffic * 100, 1) if total_traffic > 0 else 0,
+                "first_seen": row[5],
+                "last_seen": row[6],
             }
             for row in rows
         ]
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to load application analytics: {error}")
     finally:
-        connection.close()
+        return_connection(connection)

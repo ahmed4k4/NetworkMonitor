@@ -6,7 +6,7 @@ import json
 API = 'http://localhost:8000'
 
 def login():
-    r = requests.post(API + '/api/auth/login', json={'username':'admin','password':'admin_password_change_me'}, timeout=5)
+    r = requests.post(API + '/api/auth/login', json={'username':'admin','password':'admin'}, timeout=5)
     return r.json()['access_token']
 
 def test_complete_flow():

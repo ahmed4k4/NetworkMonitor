@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from database.connection import get_connection
+from database.connection import get_connection, return_connection
 from api.security import get_current_user
 
 router = APIRouter()
@@ -57,4 +57,4 @@ def get_alerts(
         )
 
     finally:
-        connection.close()
+        return_connection(connection)

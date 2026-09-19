@@ -1,0 +1,122 @@
+import io
+
+p = r"app/devices/[id]/page.tsx"
+with io.open(p, "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
+# Fix line 250 syntax error
+for i, ln in enumerate(lines):
+    if "; )}</div>}</CardContent></Card>" in ln:
+        lines[i] = ln.replace("; )}</div>}</CardContent></Card>", "; })}</div>}</CardContent></Card>")
+
+# Remove truncated last line
+while lines and "<Select value={quotaUnit} on" in lines[-1]:
+    lines.pop()
+
+# Remove trailing blank lines
+while lines and lines[-1].strip() == "":
+    lines.pop()
+
+# Build tail as raw strings to avoid escaping issues
+s1 = (
+    '<Select value={quotaUnit} onValueChange={(v) => setQuotaUnit(v as "mb" | "gb")}>'
+    '<SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>'
+    '<SelectContent><SelectItem value="mb">MB</SelectItem><SelectItem value="gb">GB</SelectItem></SelectContent>'
+    '</Select></div></div>'
+    '<div><label className="block text-sm font-medium mb-1">Monthly Quota</label>'
+    '<div className="flex gap-2">'
+    '<Input type="number" value={quotaMonthly} onChange={(e) => setQuotaMonthly(e.target.value)} placeholder="50" min="0" step="0.1" />'
+    '<Select value={quotaUnit} onValueChange={(v) => setQuotaUnit(v as "mb" | "gb")}>'
+    '<SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>'
+    '<SelectContent><SelectItem value="mb">MB</SelectItem><SelectItem value="gb">GB</SelectItem></SelectContent>'
+    '</Select></div></div></div>'
+    '<div className="grid gap-4 sm:grid-cols-3">'
+    '<div><label className="block text-sm font-medium mb-1">Reset Period</label>'
+    '<Select value={quotaResetPeriod} onValueChange={(v) => setQuotaResetPeriod(v as "DAILY" | "WEEKLY" | "MONTHLY")}>'
+    '<SelectTrigger><SelectValue /></SelectTrigger>'
+    '<SelectContent><SelectItem value="DAILY">Daily</SelectItem><SelectItem value="WEEKLY">Weekly</SelectItem><SelectItem value="MONTHLY">Monthly</SelectItem></SelectContent>'
+    '</Select></div>'
+    '<div><label className="block text-sm font-medium mb-1">Action</label>'
+    '<Select value={quotaAction} onValueChange={(v) => setQuotaAction(v as "ALERT" | "BLOCK" | "THROTTLE")}>'
+    '<SelectTrigger><SelectValue /></SelectTrigger>'
+    '<SelectContent><SelectItem value="ALERT">Alert</SelectItem><SelectItem value="BLOCK">Block</SelectItem><SelectItem value="THROTTLE">Throttle</SelectItem></SelectContent>'
+    '</Select></div>'
+    '<div className="flex items-end gap-2 pb-1">'
+    '<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quotaEnabled} onChange={(e) => setQuotaEnabled(e.target.checked)} className="h-4 w-4" />Enable quota</label>'
+    '</div></div></div>'
+    '<DialogFooter><Button variant="outline" onClick={() => setQuotaOpen(false)}>Cancel</Button>'
+    '<Button variant="destructive" onClick={handleRemoveQuota} disabled={quotaLoading}>{quotaLoading ? "Removing..." : "Remove Quota"}</Button>'
+    '<Button onClick={handleSaveQuota} disabled={quotaLoading}>{quotaLoading ? "Saving..." : "Save Quota"}</Button>'
+    '</DialogFooter></DialogContent></Dialog>'
+)
+
+s2 = (
+    '      <Dialog open={rulesOpen} onOpenChange={setRulesOpen}><DialogContent><DialogHeader>'
+    '<DialogTitle>Manage Domain Rules</DialogTitle><DialogDescription>Allow or block specific domains for this device</DialogDescription></DialogHeader>'
+    '<div className="space-y-4"><div className="space-y-3 max-h-[300px] overflow-y-auto">'
+    '{rules.length === 0 ? <div className="text-center py-8 text-muted-foreground">No domain rules configured.</div> : rules.map((rule) => ('
+    '<div key={rule.id} className="flex items-center justify-between p-3 border border-border rounded-lg">'
+    '{editingRuleId === rule.id?.toString() ? ('
+    '<div className="flex-1 flex items-center gap-2">'
+    '<Input value={editedRule.domain} onChange={(e) => setEditedRule({ ...editedRule, domain: e.target.value })} className="flex-1" />'
+    '<Select value={editedRule.action} onValueChange={(v) => setEditedRule({ ...editedRule, action: v as "ALLOW" | "BLOCK" })}>'
+    '<SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>'
+    '<SelectContent><SelectItem value="BLOCK">Block</SelectItem><SelectItem value="ALLOW">Allow</SelectItem></SelectContent></Select>'
+    '<label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={editedRule.enabled} onChange={(e) => setEditedRule({ ...editedRule, enabled: e.target.checked })} className="h-4 w-4" />On</label>'
+    '<Button variant="ghost" size="icon" onClick={() => { setEditingRuleId(null); handleUpdateRule(rule.id?.toString() || ""); }}><Check className="h-4 w-4" /></Button>'
+    '<Button variant="ghost" size="icon" onClick={() => setEditingRuleId(null)}><X className="h-4 w-4" /></Button>'
+    '</div>) : ('
+    '<div className="flex items-center gap-3"><Badge variant={rule.action === "BLOCK" ? "destructive" : "default"}>{rule.action}</Badge>'
+    '<div><p className="font-medium">{rule.name}</p><p className="text-xs text-muted-foreground">{rule.enabled ? "Enabled" : "Disabled"}</p></div></div>)}'
+    '<div className="flex items-center gap-2">'
+    '<Button variant="ghost" size="icon" onClick={() => setEditingRuleId(rule.id?.toString() || "")}><Edit2 className="h-4 w-4" /></Button>'
+    '<Button variant="ghost" size="icon" onClick={() => handleDeleteRule(rule.id?.toString() || "")}><Trash2 className="h-4 w-4" /></Button>'
+    '</div></div>))}'
+    '</div><div className="flex items-center gap-2 border-t border-border pt-3">'
+    '<Input value={newRule.domain} onChange={(e) => setNewRule({ ...newRule, domain: e.target.value })} placeholder="example.com" className="flex-1" />'
+    '<Select value={newRule.action} onValueChange={(v) => setNewRule({ ...newRule, action: v as "ALLOW" | "BLOCK" })}>'
+    '<SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>'
+    '<SelectContent><SelectItem value="BLOCK">Block</SelectItem><SelectItem value="ALLOW">Allow</SelectItem></SelectContent></Select>'
+    '<Button onClick={handleCreateRule} disabled={creatingRule || !newRule.domain.trim()}>{creatingRule ? "Adding..." : "Add Rule"}</Button>'
+    '</div></div><DialogFooter><Button variant="outline" onClick={() => setRulesOpen(false)}>Close</Button></DialogFooter></DialogContent></Dialog>'
+)
+
+s3 = (
+    '      <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}><DialogContent><DialogHeader>'
+    '<DialogTitle>Manage Schedules</DialogTitle><DialogDescription>Create time-based access schedules for this device</DialogDescription></DialogHeader>'
+    '<div className="space-y-4"><div className="space-y-3 max-h-[260px] overflow-y-auto">'
+    '{schedules.length === 0 ? <div className="text-center py-8 text-muted-foreground">No schedules configured.</div> : schedules.map((sched) => ('
+    '<div key={sched.id} className="flex items-center justify-between p-3 border border-border rounded-lg">'
+    '<div><p className="font-medium">{sched.name}</p><p className="text-xs text-muted-foreground">{sched.enabled ? "Enabled" : "Disabled"} · {sched.action}</p></div>'
+    '<Button variant="ghost" size="icon" onClick={() => handleDeleteRule(sched.id?.toString() || "")}><Trash2 className="h-4 w-4" /></Button>'
+    '</div>))}</div>'
+    '<div className="border-t border-border pt-3 space-y-3">'
+    '<div className="flex gap-2">'
+    '<Input value={newSchedule.name} onChange={(e) => setNewSchedule({ ...newSchedule, name: e.target.value })} placeholder="Schedule name" className="flex-1" />'
+    '<Select value={newSchedule.action} onValueChange={(v) => setNewSchedule({ ...newSchedule, action: v as "ALLOW" | "BLOCK" })}>'
+    '<SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>'
+    '<SelectContent><SelectItem value="BLOCK">Block</SelectItem><SelectItem value="ALLOW">Allow</SelectItem></SelectContent></Select>'
+    '</div><div className="flex gap-2">'
+    '<Input value={newSchedule.domain} onChange={(e) => setNewSchedule({ ...newSchedule, domain: e.target.value })} placeholder="Domain (optional)" className="flex-1" />'
+    '</div><div className="flex gap-2 items-center">'
+    '<Input type="time" value={newSchedule.startTime} onChange={(e) => setNewSchedule({ ...newSchedule, startTime: e.target.value })} className="w-[140px]" />'
+    '<span className="text-muted-foreground">to</span>'
+    '<Input type="time" value={newSchedule.endTime} onChange={(e) => setNewSchedule({ ...newSchedule, endTime: e.target.value })} className="w-[140px]" />'
+    '<Button onClick={handleCreateSchedule} disabled={creatingSchedule || !newSchedule.name.trim()}>{creatingSchedule ? "Adding..." : "Add Schedule"}</Button>'
+    '</div></div></div><DialogFooter><Button variant="outline" onClick={() => setScheduleOpen(false)}>Close</Button></DialogFooter></DialogContent></Dialog>'
+)
+
+lines.append(s1 + "\n")
+lines.append("\n")
+lines.append(s2 + "\n")
+lines.append("\n")
+lines.append(s3 + "\n")
+lines.append("\n")
+lines.append("    </div>\n")
+lines.append("  );\n")
+lines.append("}\n")
+
+with io.open(p, "w", encoding="utf-8") as f:
+    f.writelines(lines)
+
+print("DONE. new total lines:", len(lines))

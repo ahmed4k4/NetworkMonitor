@@ -1,0 +1,18 @@
+import sys
+sys.path.insert(0, r'e:\NetworkMonitor\network-engine')
+from database.connection import get_connection
+
+conn = get_connection()
+try:
+    with conn.cursor() as cur:
+        cur.execute('''
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns 
+            WHERE table_name = %s
+            ORDER BY ordinal_position
+        ''', ('dns_queries',))
+        for row in cur.fetchall():
+            print(row)
+finally:
+    from database.connection import return_connection
+    return_connection(conn)

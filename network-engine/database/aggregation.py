@@ -1,4 +1,4 @@
-from database.connection import get_connection
+from database.connection import get_connection, return_connection
 
 
 def aggregate_hourly():
@@ -71,7 +71,7 @@ def aggregate_hourly():
         connection.commit()
 
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 def aggregate_daily():
@@ -138,7 +138,7 @@ def aggregate_daily():
         connection.commit()
 
     finally:
-        connection.close()
+        return_connection(connection)
 
 def aggregate_monthly():
 
@@ -208,4 +208,4 @@ def aggregate_monthly():
         connection.commit()
 
     finally:
-        connection.close()
+        return_connection(connection)

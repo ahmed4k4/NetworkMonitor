@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-from database.connection import get_connection
+from database.connection import get_connection, return_connection
 from api.security import get_current_user
 
 router = APIRouter()
@@ -62,7 +62,7 @@ def get_reports(
         )
 
     finally:
-        connection.close()
+        return_connection(connection)
 
 
 @router.post("/generate")
@@ -110,4 +110,4 @@ def generate_report(
         )
 
     finally:
-        connection.close()
+        return_connection(connection)
