@@ -168,6 +168,16 @@ def main():
             logger.info(f"Cleared {cur.rowcount} inflated traffic_samples row(s)")
             cur.execute("DELETE FROM usage_daily")
             logger.info(f"Cleared {cur.rowcount} inflated usage_daily row(s)")
+            # usage_hourly and usage_monthly are also cumulative rollups of the
+            # same inflated history. They must be cleared too, otherwise the
+            # /api/analytics/monthly endpoint keeps displaying a stale inflated
+            # monthly total (upload/packets) that no longer matches the clean
+            # daily rollup after this wipe. They will be re-populated by the
+            # live save_delta_sample/aggregate_monthly paths from fresh traffic.
+            cur.execute("DELETE FROM usage_hourly")
+            logger.info(f"Cleared {cur.rowcount} inflated usage_hourly row(s)")
+            cur.execute("DELETE FROM usage_monthly")
+            logger.info(f"Cleared {cur.rowcount} inflated usage_monthly row(s)")
             cur.execute(
                 "UPDATE devices SET total_upload = 0, total_download = 0, total_packets = 0"
             )

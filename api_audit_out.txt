@@ -25,3 +25,14 @@ INFO:     127.0.0.1:55674 - "GET /api/analytics/applications HTTP/1.1" 200 OK
 INFO:     127.0.0.1:55676 - "GET /api/analytics/hourly HTTP/1.1" 200 OK
 INFO:     127.0.0.1:55677 - "GET /api/analytics/daily HTTP/1.1" 200 OK
 INFO:     127.0.0.1:55678 - "GET /api/devices/dev_002/intelligence?range=24h HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64580 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64229 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64239 - "POST /api/system/broadcast HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64243 - "POST /api/system/broadcast HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64360 - "POST /api/system/broadcast HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64361 - "POST /api/system/broadcast HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64363 - "POST /api/system/broadcast HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63640 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64819 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64845 - "POST /login HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64848 - "POST /api/login HTTP/1.1" 404 Not Found

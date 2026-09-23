@@ -38,36 +38,48 @@ print("\nPARSER TESTS PASSED")
 
 # 4) Repository: save query then correlate
 from database.repository import DeviceIntelligenceRepository
+from database.connection import get_connection, return_connection
 repo = DeviceIntelligenceRepository()
-# Use an existing device (FK constraint) and a marker domain for isolation
-test_domain = "testdomain.example.com"
-repo.save_dns_query("dev_001", test_domain, "A")
-repo.save_dns_query("dev_001", test_domain, "A", response_ip="203.0.113.50")
-print("save_dns_query with response_ip ok")
 
-from database.connection import get_connection
+# Pick a REAL registered device at runtime (dev_001 was a removed seed device).
+conn_probe = get_connection()
+try:
+    with conn_probe.cursor() as cur:
+        cur.execute("SELECT device_id FROM devices ORDER BY device_id LIMIT 1")
+        row = cur.fetchone()
+finally:
+    return_connection(conn_probe)
+assert row, "No devices table rows to test DNS against"
+test_device = row[0]
+
+# Use a marker domain for isolation
+test_domain = "testdomain.example.com"
+repo.save_dns_query(test_device, test_domain, "A")
+repo.save_dns_query(test_device, test_domain, "A", response_ip="203.0.113.50")
+print(f"save_dns_query with response_ip ok (device={test_device})")
+
 conn = get_connection()
 try:
     with conn.cursor() as cur:
         cur.execute("""
             SELECT device_id, domain, query_type, response_ip::text
             FROM dns_queries
-            WHERE device_id = 'dev_001' AND domain = %s
+            WHERE device_id = %s AND domain = %s
             ORDER BY queried_at DESC LIMIT 3
-        """, (test_domain,))
+        """, (test_device, test_domain))
         rows = cur.fetchall()
-        for row in rows:
-            print("DNS row:", row)
-        assert any(row[3].split("/")[0] == "203.0.113.50" for row in rows), "response_ip was not stored!"
+        for row2 in rows:
+            print("DNS row:", row2)
+        assert any(r[3].split("/")[0] == "203.0.113.50" for r in rows), "response_ip was not stored!"
 
         # Verify the engine's correlation query finds the domain for that IP
         cur.execute("""
             SELECT domain FROM dns_queries
-            WHERE device_id = 'dev_001'
+            WHERE device_id = %s
               AND response_ip = '203.0.113.50'
             ORDER BY queried_at DESC
             LIMIT 1
-        """)
+        """, (test_device,))
         found = cur.fetchone()
         print("Correlated domain:", found)
         assert found and found[0] == test_domain

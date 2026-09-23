@@ -552,7 +552,7 @@ class FlowRepository:
                     cursor.execute(
                         """
                         UPDATE flows
-                        SET state = 'CLOSED', closed_at = COALESCE(closed_at, NOW())
+                        SET state = 'CLOSED'
                         WHERE device_id = %s AND state = 'ACTIVE'
                           AND last_seen < NOW() - make_interval(secs => %s)
                         """,
@@ -571,7 +571,7 @@ class FlowRepository:
                     cursor.execute(
                         """
                         UPDATE flows
-                        SET state = 'CLOSED', closed_at = COALESCE(closed_at, NOW())
+                        SET state = 'CLOSED'
                         WHERE state = 'ACTIVE'
                           AND last_seen < NOW() - make_interval(secs => %s)
                         """,

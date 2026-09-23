@@ -6,7 +6,19 @@ from database.repository import DeviceIntelligenceRepository
 from database.connection import get_connection
 from analytics.attribution import AttributionEngine
 
-DEV = "dev_001"
+from database.connection import return_connection
+
+# Pick a REAL registered device at runtime (dev_001 was a removed seed device).
+conn_probe = get_connection()
+try:
+    with conn_probe.cursor() as cur:
+        cur.execute("SELECT device_id FROM devices ORDER BY device_id LIMIT 1")
+        _row = cur.fetchone()
+finally:
+    return_connection(conn_probe)
+assert _row, "No devices table rows to test flow attribution against"
+DEV = _row[0]
+
 DOMAIN = "test-integration.example.com"
 IP = "203.0.113.77"
 
