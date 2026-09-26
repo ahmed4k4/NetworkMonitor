@@ -1,4 +1,5 @@
 from database.connection import get_connection, return_connection
+from config import network_config as config
 
 
 def aggregate_hourly():
@@ -25,7 +26,7 @@ def aggregate_hourly():
 
                     date_trunc(
                         'hour',
-                        sampled_at
+                        sampled_at AT TIME ZONE %s
                     ) AS hour_start,
 
                     SUM(download_bytes),
@@ -38,14 +39,11 @@ def aggregate_hourly():
 
                 FROM traffic_samples
 
-                WHERE sampled_at >= NOW() - INTERVAL '2 hours'
+                WHERE sampled_at >= (NOW() AT TIME ZONE %s) - INTERVAL '2 hours'
 
                 GROUP BY
                     device_id,
-                    date_trunc(
-                        'hour',
-                        sampled_at
-                    )
+                    hour_start
 
                 ON CONFLICT (
                     device_id,
@@ -65,7 +63,8 @@ def aggregate_hourly():
 
                     connections =
                         EXCLUDED.connections
-                """
+                """,
+                (config.tz, config.tz)
             )
 
         connection.commit()
@@ -96,7 +95,7 @@ def aggregate_daily():
                 SELECT
                     device_id,
 
-                    DATE(sampled_at),
+                    (sampled_at AT TIME ZONE %s)::DATE AS day_start,
 
                     SUM(download_bytes),
 
@@ -108,11 +107,11 @@ def aggregate_daily():
 
                 FROM traffic_samples
 
-                WHERE sampled_at >= NOW() - INTERVAL '2 days'
+                WHERE sampled_at >= (NOW() AT TIME ZONE %s) - INTERVAL '2 days'
 
                 GROUP BY
                     device_id,
-                    DATE(sampled_at)
+                    day_start
 
                 ON CONFLICT (
                     device_id,
@@ -132,7 +131,8 @@ def aggregate_daily():
 
                     connections =
                         EXCLUDED.connections
-                """
+                """,
+                (config.tz, config.tz)
             )
 
         connection.commit()

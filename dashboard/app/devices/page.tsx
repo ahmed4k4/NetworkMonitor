@@ -273,7 +273,9 @@ export default function DevicesPage() {
       cell: (info) => (
         <div className="flex items-center justify-end">
           <ArrowDown className="h-4 w-4 mr-1 text-blue-500" />
-          {formatBytes(info.row.original.download_today ?? info.row.original.download)}
+          {info.row.original.download_today != null 
+            ? formatBytes(info.row.original.download_today) 
+            : <span className="text-muted-foreground">—</span>}
         </div>
       ),
     },
@@ -283,7 +285,9 @@ export default function DevicesPage() {
       cell: (info) => (
         <div className="flex items-center justify-end">
           <ArrowUp className="h-4 w-4 mr-1 text-green-500" />
-          {formatBytes(info.row.original.upload_today ?? info.row.original.upload)}
+          {info.row.original.upload_today != null 
+            ? formatBytes(info.row.original.upload_today) 
+            : <span className="text-muted-foreground">—</span>}
         </div>
       ),
     },
@@ -291,9 +295,12 @@ export default function DevicesPage() {
       id: "total",
       header: "Total Today",
       cell: (info) => {
-        const total = (info.row.original.download_today ?? info.row.original.download) + 
-                     (info.row.original.upload_today ?? info.row.original.upload);
-        return <div className="text-right">{formatBytes(total)}</div>;
+        const downloadToday = info.row.original.download_today;
+        const uploadToday = info.row.original.upload_today;
+        if (downloadToday != null && uploadToday != null) {
+          return <div className="text-right">{formatBytes(downloadToday + uploadToday)}</div>;
+        }
+        return <span className="text-muted-foreground">—</span>;
       },
     },
     {
@@ -303,7 +310,9 @@ export default function DevicesPage() {
         <div className="flex items-center gap-1">
           <ArrowDown className="h-3 w-3 text-blue-500" />
           <span className="text-xs text-muted-foreground">
-            {formatSpeed(info.row.original.current_speed_bps ?? info.row.original.download_speed_bps)}
+            {info.row.original.current_speed_bps != null 
+              ? formatSpeed(info.row.original.current_speed_bps)
+              : "—"}
           </span>
         </div>
       ),

@@ -7,7 +7,7 @@ from database.migrations import initialize_database
 from database.repository import DeviceRepository, FlowRepository, TrafficRepository
 from database.connection import get_connection
 from models.flow import Flow
-from datetime import datetime
+from datetime import datetime, timezone
 from logger import logger
 import time
 import sys
@@ -170,7 +170,7 @@ try:
     test_flow.packets = 150
     test_flow.bytes = 75000
     test_flow.upload_bytes = 75000
-    test_flow.last_seen = datetime.now()
+    test_flow.last_seen = datetime.now(timezone.utc)
     flow_repo.save_flow(test_flow)
     logger.info("✓ Flow updated via UPSERT")
     

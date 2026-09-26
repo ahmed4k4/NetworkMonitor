@@ -33,6 +33,7 @@ class NetworkConfig:
     capture_filter: str = ""
     flow_timeout: int = None
     bandwidth_window: int = None
+    tz: str = "Africa/Cairo"
 
     def __post_init__(self):
         """Apply YAML config and environment overrides"""

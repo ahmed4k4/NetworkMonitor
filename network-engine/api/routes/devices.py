@@ -20,6 +20,7 @@ from database.connection import (
 
 from database.repository import DeviceRepository
 from database.audit import log_admin_action
+from config import network_config as config
 
 router = APIRouter()
 
@@ -100,12 +101,13 @@ def get_devices(
                     dl.daily_quota_bytes,
                     dl.weekly_quota_bytes,
                     dl.monthly_quota_bytes,
+                    dl.reset_period,
                     dl.used_bytes,
                     dl.enabled AS quota_enabled
                 FROM devices d
                 LEFT JOIN usage_daily ud
                     ON ud.device_id = d.device_id
-                    AND ud.day_start = (NOW() AT TIME ZONE 'Africa/Cairo')::date
+                    AND ud.day_start = (NOW() AT TIME ZONE %s)::date
                 LEFT JOIN LATERAL (
                     SELECT download_speed_bps, upload_speed_bps
                     FROM traffic_samples
@@ -124,7 +126,8 @@ def get_devices(
                         ELSE 1
                     END,
                     d.last_seen DESC
-                """
+                """,
+                (config.tz,)
             )
 
             rows = cursor.fetchall()
@@ -138,9 +141,17 @@ def get_devices(
             upload_speed = row[15] or 0
             # Columns: 16=limit_id, 17=dl_limit, 18=ul_limit, 19=limit_enabled,
             # 20=quota_id, 21=daily_quota, 22=weekly_quota, 23=monthly_quota,
-            # 24=used_bytes, 25=quota_enabled
-            quota_bytes = row[21] or row[22] or row[23]
-            used_bytes = row[24] or 0
+            # 24=reset_period, 25=used_bytes, 26=quota_enabled
+            reset_period = row[24] or "DAILY"
+            if reset_period == "DAILY":
+                quota_bytes = row[21]
+            elif reset_period == "WEEKLY":
+                quota_bytes = row[22]
+            elif reset_period == "MONTHLY":
+                quota_bytes = row[23]
+            else:
+                quota_bytes = row[21] or row[22] or row[23]
+            used_bytes = row[25] or 0
             usage_pct = (
                 (used_bytes / quota_bytes * 100)
                 if quota_bytes and quota_bytes > 0
@@ -239,12 +250,13 @@ def get_device(
                     dl.daily_quota_bytes,
                     dl.weekly_quota_bytes,
                     dl.monthly_quota_bytes,
+                    dl.reset_period,
                     dl.used_bytes,
                     dl.enabled AS quota_enabled
                 FROM devices d
                 LEFT JOIN usage_daily ud
                     ON ud.device_id = d.device_id
-                    AND ud.day_start = (NOW() AT TIME ZONE 'Africa/Cairo')::date
+                    AND ud.day_start = (NOW() AT TIME ZONE %s)::date
                 LEFT JOIN LATERAL (
                     SELECT download_speed_bps, upload_speed_bps
                     FROM traffic_samples
@@ -258,7 +270,7 @@ def get_device(
                     ON dl.device_id = d.device_id
                 WHERE d.device_id = %s
                 """,
-                (device_id,),
+                (config.tz, device_id),
             )
 
             row = cursor.fetchone()
@@ -274,8 +286,19 @@ def get_device(
         upload_today = row[13] or 0
         download_speed = row[14] or 0
         upload_speed = row[15] or 0
-        quota_bytes = row[21] or row[22] or row[23]
-        used_bytes = row[24] or 0
+        # Columns: 16=limit_id, 17=dl_limit, 18=ul_limit, 19=limit_enabled,
+        # 20=quota_id, 21=daily_quota, 22=weekly_quota, 23=monthly_quota,
+        # 24=reset_period, 25=used_bytes, 26=quota_enabled
+        reset_period = row[24] or "DAILY"
+        if reset_period == "DAILY":
+            quota_bytes = row[21]
+        elif reset_period == "WEEKLY":
+            quota_bytes = row[22]
+        elif reset_period == "MONTHLY":
+            quota_bytes = row[23]
+        else:
+            quota_bytes = row[21] or row[22] or row[23]
+        used_bytes = row[25] or 0
         usage_pct = (
             (used_bytes / quota_bytes * 100)
             if quota_bytes and quota_bytes > 0

@@ -79,8 +79,8 @@ class DeviceRepository:
                     cursor.execute(
                         """
                         INSERT INTO devices (
-                            device_id, mac_address, ip_address,
-                            hostname, custom_name, vendor, interface_name, state,
+                            device_id, mac_address, ip_address, hostname,
+                            custom_name, vendor, interface_name, state,
                             first_seen, last_seen
                         )
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
@@ -89,35 +89,9 @@ class DeviceRepository:
                     )
             
             connection.commit()
-            logger.debug(f"Device {device_id} upserted")
         except Exception as e:
             connection.rollback()
             logger.error(f"Error upserting device: {e}")
-            raise
-        finally:
-            return_connection(connection)
-
-    def update_device_usage(self, device_id, upload_bytes=0, download_bytes=0, packets=0):
-        """Increment device total usage counters"""
-        connection = get_connection()
-        
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    UPDATE devices
-                    SET total_upload = total_upload + %s,
-                        total_download = total_download + %s,
-                        total_packets = total_packets + %s,
-                        last_seen = NOW()
-                    WHERE device_id = %s
-                    """,
-                    (upload_bytes, download_bytes, packets, device_id)
-                )
-            connection.commit()
-        except Exception as e:
-            connection.rollback()
-            logger.error(f"Error updating device usage: {e}")
         finally:
             return_connection(connection)
 
@@ -755,69 +729,38 @@ class TrafficRepository:
                     (upload_delta, download_delta, packets_delta, device_id)
                 )
 
-                cursor.execute(
-                    """
-                    INSERT INTO usage_daily (device_id, day_start, download_bytes, upload_bytes, packets)
-                    VALUES (%s, (NOW() AT TIME ZONE %s)::date, %s, %s, %s)
-                    ON CONFLICT (device_id, day_start)
-                    DO UPDATE SET
-                        download_bytes = usage_daily.download_bytes + EXCLUDED.download_bytes,
-                        upload_bytes = usage_daily.upload_bytes + EXCLUDED.upload_bytes,
-                        packets = usage_daily.packets + EXCLUDED.packets
-                    """,
-                    (device_id, APP_TZ, download_delta, upload_delta, packets_delta)
-                )
-
-                cursor.execute(
-                    """
-INSERT INTO usage_hourly (device_id, hour_start, download_bytes, upload_bytes, packets)
-VALUES (%s, date_trunc('hour', NOW() AT TIME ZONE %s), %s, %s, %s)
-</｜DSML｜>
-                    ON CONFLICT (device_id, hour_start)
-                    DO UPDATE SET
-                        download_bytes = usage_hourly.download_bytes + EXCLUDED.download_bytes,
-                        upload_bytes = usage_hourly.upload_bytes + EXCLUDED.upload_bytes,
-                        packets = usage_hourly.packets + EXCLUDED.packets
-                    """,
-                    (device_id, APP_TZ, download_delta, upload_delta, packets_delta)
-                )
-
-                cursor.execute(
-                    """
-INSERT INTO usage_monthly (device_id, month_start, download_bytes, upload_bytes, packets)
-VALUES (%s, date_trunc('month', (NOW() AT TIME ZONE %s)::date)::date, %s, %s, %s)
-                    ON CONFLICT (device_id, month_start)
-                    DO UPDATE SET
-                        download_bytes = usage_monthly.download_bytes + EXCLUDED.download_bytes,
-                        upload_bytes = usage_monthly.upload_bytes + EXCLUDED.upload_bytes,
-                        packets = usage_monthly.packets + EXCLUDED.packets
-                    """,
-                    (device_id, APP_TZ, download_delta, upload_delta, packets_delta)
-                )
+                # NOTE: usage_daily, usage_hourly, usage_monthly are now maintained
+                # EXCLUSIVELY by the aggregation cron job (database/aggregation.py).
+                # Removing real-time upserts here eliminates the dual-write conflict
+                # where aggregation did REPLACEMENT (EXCLUDED = SUM) while this code
+                # did INCREMENT (+=), causing massive overcounting.
+                # The aggregation cron runs every minute and is the single source of truth.
 
                 # Update data_limits used_bytes based on reset_period
+                # Read from traffic_samples directly since usage_daily is now aggregation-only
                 cursor.execute(
                     """
                     UPDATE data_limits
                     SET used_bytes = 
                         CASE
                             WHEN reset_period = 'DAILY' THEN (
-                                SELECT COALESCE(download_bytes, 0) + COALESCE(upload_bytes, 0)
-                                FROM usage_daily
+                                SELECT COALESCE(SUM(download_bytes), 0) + COALESCE(SUM(upload_bytes), 0)
+                                FROM traffic_samples
                                 WHERE device_id = data_limits.device_id
-                                  AND day_start = (NOW() AT TIME ZONE %s)::date
+                                  AND sampled_at >= (NOW() AT TIME ZONE %s)::date
+                                  AND sampled_at < ((NOW() AT TIME ZONE %s)::date) + INTERVAL '1 day'
                             )
                             WHEN reset_period = 'WEEKLY' THEN (
                                 SELECT COALESCE(SUM(download_bytes), 0) + COALESCE(SUM(upload_bytes), 0)
-                                FROM usage_daily
+                                FROM traffic_samples
                                 WHERE device_id = data_limits.device_id
-                                  AND day_start >= ((NOW() AT TIME ZONE %s)::date) - INTERVAL '6 days'
+                                  AND sampled_at >= ((NOW() AT TIME ZONE %s)::date) - INTERVAL '6 days'
                             )
                             WHEN reset_period = 'MONTHLY' THEN (
                                 SELECT COALESCE(SUM(download_bytes), 0) + COALESCE(SUM(upload_bytes), 0)
-                                FROM usage_daily
+                                FROM traffic_samples
                                 WHERE device_id = data_limits.device_id
-                                  AND day_start >= date_trunc('month', (NOW() AT TIME ZONE %s)::date)::date
+                                  AND sampled_at >= date_trunc('month', (NOW() AT TIME ZONE %s)::date)::date
                             )
                             ELSE 0
                         END,
@@ -825,7 +768,7 @@ VALUES (%s, date_trunc('month', (NOW() AT TIME ZONE %s)::date)::date, %s, %s, %s
                     WHERE data_limits.device_id = %s
                       AND data_limits.enabled = TRUE
                     """,
-                    (APP_TZ, APP_TZ, APP_TZ, device_id)
+                    (APP_TZ, APP_TZ, APP_TZ, APP_TZ, device_id)
                 )
 
             connection.commit()

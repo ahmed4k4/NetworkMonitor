@@ -884,8 +884,27 @@ class NetworkEngine:
             # Update last_attributed_at for next cycle's speed calculation
             flow.last_attributed_at = now
             
+            # Broadcast intelligence updates for real-time UI
+            asyncio_safe_broadcast({
+                "type": "intelligence_update",
+                "data": {
+                    "device_id": device_id,
+                    "application": attribution_result.application,
+                    "category": attribution_result.category,
+                    "confidence": attribution_result.confidence,
+                    "domain": domain,
+                    "sni": sni,
+                    "protocol": protocol,
+                    "download_bytes": download_delta,
+                    "upload_bytes": upload_delta,
+                    "total_bytes": total_delta,
+                    "connections": conn_inc,
+                }
+            })
+        
         except Exception as e:
-            logger.error(f"Error attributing flow: {e}")
+            import traceback
+            logger.error(f"Error attributing flow: {e}\n{traceback.format_exc()}")
     
     def cleanup_flows(self):
         """Periodically clean up old flows"""
